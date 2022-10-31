@@ -2,7 +2,7 @@ package page;
 
 import com.google.common.collect.ImmutableMap;
 import io.appium.java_client.AppiumDriver;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -13,7 +13,6 @@ public class Home {
     WebDriverWait wait;
     By title = By.xpath("//XCUIElementTypeStaticText[@name=\"Home\"]");
     By howToUseItButton = By.cssSelector("[label='How to use it']");
-    //By howToUseItButton = By.xpath("//XCUIElementTypeOther[@name=\"How to use it\"][2]");
     By homeButton = By.xpath("//XCUIElementTypeOther[@name=\"Home\"])[2]");
     By secretFolderButton = By.xpath("//XCUIElementTypeOther[@name=\"Secret folder\"]");
     By settingsButton = By.xpath("//XCUIElementTypeOther[@name=\"Settings\"]");
@@ -31,18 +30,20 @@ public class Home {
         this.driver = driver;
         this.wait = wait;
         wait.until(ExpectedConditions.presenceOfElementLocated(title));
-        Assert.assertTrue(driver.findElement(titleNotGeneratedAPassword).isDisplayed());
-        Assert.assertTrue(driver.findElement(titleYouCanAddAPassword).isDisplayed());
-        Assert.assertTrue(driver.findElement(titleAutoFillOff).isDisplayed());
+        Assertions.assertTrue(driver.findElement(addPasswordButton).isDisplayed());
+        Assertions.assertTrue(driver.findElement(howToUseItButton).isDisplayed());
+        Assertions.assertTrue(driver.findElement(secretFolderButton).isDisplayed());
+        Assertions.assertTrue(driver.findElement(settingsButton).isDisplayed());
+
+
+        Assertions.assertTrue(driver.findElement(titleNotGeneratedAPassword).isDisplayed());
+        Assertions.assertTrue(driver.findElement(titleYouCanAddAPassword).isDisplayed());
     }
     public void autoFillOn(){
         driver.findElement(autoFillSwitch).click();
         wait.until(ExpectedConditions.elementToBeClickable(passcodeField)).sendKeys("q"+ Keys.ENTER);
-        //driver.findElement(passcodeField).sendKeys("q");
         wait.until(ExpectedConditions.elementToBeClickable(passwordOptionsButton)).click();
-        //driver.findElement(passwordOptionsButton).click();
         wait.until(ExpectedConditions.elementToBeClickable(authenticatorButton)).click();
-        //driver.findElement(authenticatorButton).click();
         driver.executeScript("mobile: launchApp", ImmutableMap.of("bundleId",
                 "appstrain.test.authenticator"));
     }
@@ -51,8 +52,9 @@ public class Home {
         driver.findElement(howToUseItButton).click();
     }
 
-    public void addPassword(){
+    public GeneratePasswordPage addPassword(){
         driver.findElement(addPasswordButton).click();
+        return new GeneratePasswordPage(driver, wait);
     }
 
     public void goToSecretFolder(){
