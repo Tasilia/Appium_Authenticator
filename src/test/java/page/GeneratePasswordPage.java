@@ -3,9 +3,11 @@ package page;
 import io.appium.java_client.AppiumDriver;
 import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.util.HashMap;
+import java.util.List;
 
 public class GeneratePasswordPage {
     AppiumDriver driver;
@@ -22,19 +24,18 @@ public class GeneratePasswordPage {
     By lettersSwitch = By.xpath("//XCUIElementTypeOther[@name=\"Letters (e.g. Aa)\"]/XCUIElementTypeSwitch");
     By symbolsSwitch = By.xpath("//XCUIElementTypeOther[@name=\"Symbols (e.g. @#!)\"]/XCUIElementTypeSwitch");
     By excludeSwitch = By.xpath("//XCUIElementTypeOther[@name=\"Exclude similar characters\"]/XCUIElementTypeSwitch");
+    By textPasswordLength = By.xpath("//XCUIElementTypeStaticText[contains(@name,\"Length\")]");
+    By passwordPath = By.xpath("//XCUIElementTypeOther[contains(@name,\"password\")]//preceding::XCUIElementTypeStaticText");
+    By backButton = By.cssSelector("[label='Back']");
     public static final String letters = "letters";
     public static final String symbols = "symbols";
     public static final String digits = "digits";
     public static final String exclude = "exclude";
-    public static final String save = "save";
-    public static final String generate = "generate";
     HashMap<String, By> mapSwitch = new HashMap<String, By>() {{
         put(digits, digitsSwitch);
         put(letters, lettersSwitch);
         put(exclude, excludeSwitch);
         put(symbols, symbolsSwitch);
-        put(save, savePasswordButton);
-        put(generate, generatePasswordButton);
     }};
 
     public GeneratePasswordPage(AppiumDriver driver, WebDriverWait wait) {
@@ -50,33 +51,25 @@ public class GeneratePasswordPage {
         Assertions.assertTrue(pageSource.contains(textSymbols));
         Assertions.assertTrue(pageSource.contains(textExclude));
     }
-    public String getAttribute(String need, String attribute) {
-        return driver.findElement(mapSwitch.get(need)).getAttribute(attribute);
+    public String getSwitchValue(String need) {
+        return driver.findElement(mapSwitch.get(need)).getAttribute("value");
     }
-    public void click(String need) {
-        driver.findElement(mapSwitch.get(need)).click();
+    public String getEnabledGeneratePasswordButton() {
+        return driver.findElement(generatePasswordButton).getAttribute("enabled");
+    }
+    public void click(String desiredSwitch){
+        driver.findElement(mapSwitch.get(desiredSwitch)).click();
     }
     public void turnOnSwitch(String desiredSwitch) {
-        if (getAttribute(desiredSwitch, "value").equals("0")) {
+        if (getSwitchValue(desiredSwitch).equals("0")) {
             click(desiredSwitch);
         }
     }
     public void turnOffSwitch(String desiredSwitch) {
-        if (getAttribute(desiredSwitch, "value").equals("1")) {
+        if (getSwitchValue(desiredSwitch).equals("1")) {
             click(desiredSwitch);
         }
     }
-//    public void turnSwitch(String desiredSwitch, String action) {
-//        if (action.equals("on")) {
-//            if (getAttribute(desiredSwitch, "value").equals("0")) {
-//                click(desiredSwitch);
-//            }
-//        } else {
-//            if (getAttribute(desiredSwitch, "value").equals("1")) {
-//                click(desiredSwitch);
-//            }
-//        }
-//    }
     public void turnOnOneSwitch(String desiredSwitch, String[] nameSwitch) {
         for (String name : nameSwitch) {
             if (name.equals(desiredSwitch)) {
@@ -85,5 +78,41 @@ public class GeneratePasswordPage {
                 turnOffSwitch(name);
             }
         }
+    }
+    public Integer getPasswordLength() {
+        String passwordLength = driver.findElement(textPasswordLength).getAttribute("name");
+        return Integer.parseInt(passwordLength.substring(8));
+    }
+    public String getGeneratedPassword() {
+        List parser = driver.findElements(passwordPath);
+        WebElement passwordWebElement = (WebElement)parser.get(3);
+        return passwordWebElement.getAttribute("name");
+    }
+    public void turnSwitch(String action, String desiredSwitch) {
+        if (action.equals("On")) {
+            turnOnSwitch(desiredSwitch);
+        } else {
+            turnOffSwitch(desiredSwitch);
+        }
+    }
+    public void turnOnThreeSwitch(String[] nameSwitch) {
+        for (String name : nameSwitch) {
+            turnOnSwitch(name);
+        }
+    }
+    public void clickGeneratePassword(){
+        driver.findElement(generatePasswordButton).click();
+    }
+    public CreateAccountPage clickSave(){
+        driver.findElement(savePasswordButton).click();
+        return new CreateAccountPage(driver, wait);
+    }
+    public void goBack() {
+        driver.findElement(backButton).click();
+    }
+    public CreateAccountPage savePassword(){
+        turnOnSwitch(digits);
+        clickGeneratePassword();
+        return clickSave();
     }
 }

@@ -8,6 +8,9 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Home {
     AppiumDriver driver;
     WebDriverWait wait;
@@ -25,6 +28,7 @@ public class Home {
     By titleNotGeneratedAPassword = By.xpath("//XCUIElementTypeStaticText[@name=\"You have not generated a password yet\"]");
     //XCUIElementTypeStaticText[@name="You have not generated a password yet"]
     By titleYouCanAddAPassword = By.xpath("//XCUIElementTypeStaticText[@name=\"You can add a password and save it\"]");
+    By backButton = By.cssSelector("[label='Back']");
     //XCUIElementTypeStaticText[@name="You can add a password and save it"]
     public Home(AppiumDriver driver, WebDriverWait wait) {
         this.driver = driver;
@@ -62,5 +66,8 @@ public class Home {
     }
     public void goToSettings(){
         driver.findElement(settingsButton).click();
+    }
+    public void goBack() {
+        driver.findElement(backButton).click();
     }
 }

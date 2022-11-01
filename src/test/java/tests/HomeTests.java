@@ -1,6 +1,7 @@
 package tests;
 
 import com.google.common.collect.ImmutableMap;
+import helper.Actions;
 import helper.GeneratePassword;
 import helper.MyiOSDriver;
 import io.appium.java_client.ios.IOSDriver;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import page.*;
@@ -21,18 +23,19 @@ import java.util.List;
 public class HomeTests {
     IOSDriver driver;
     WebDriverWait wait;
-    By backButton = By.cssSelector("[label='Back']");
     final String letters = GeneratePasswordPage.letters;
     final String symbols = GeneratePasswordPage.symbols;
     final String digits = GeneratePasswordPage.digits;
     final String exclude = GeneratePasswordPage.exclude;
-    final String save = GeneratePasswordPage.save;
-    final String generate = GeneratePasswordPage.generate;
     private static Integer[] password = new GeneratePassword().getRandomPassword();
     String[] nameSwitch = new String[] {digits, letters, symbols};
     String[] symbolsExamples = new String[] {"!", "@", "#", "$", "%", "^", "`", "&", "*", "(", ")", "-", "+", "\"",
             "№", ",", ":", ".", ";", "'", "|", "/", "<", ">", "±", "~", "\\", "]", "[", "{", "}", "_", "?", "="};
     String[] similarCharacters = new String[] {"o", "O", "0", "1", "|"};
+    final int xLength8 = 130;
+    final int xLength20 = 345;
+    final int xLength4 = 50;
+    int y = 360;
     @BeforeEach
     public void setUp() throws MalformedURLException {
         URL remoteUrl = new URL("http://127.0.0.1:4723/wd/hub");
@@ -67,9 +70,18 @@ public class HomeTests {
 
     @Test
     public void testGoToHowtoUseItAndBack() {
-        new Home(driver, wait).goToHowToUse();
+        Home home = new Home(driver, wait);
+        home.goToHowToUse();
         Assertions.assertTrue(driver.getPageSource().contains("How to enable"));
-        driver.findElement(backButton).click();
+        home.goBack();
+        Assertions.assertTrue(driver.getPageSource().contains("Home"));
+    }
+    @Test
+    public void testGoToHowtoUseItAndBackBySwipe() throws InterruptedException{
+        Home home = new Home(driver, wait);
+        home.goToHowToUse();
+        Assertions.assertTrue(driver.getPageSource().contains("How to enable"));
+        new Actions(driver).dragFromTo(10, y, 300, y);
         Assertions.assertTrue(driver.getPageSource().contains("Home"));
     }
     @Test
@@ -85,28 +97,22 @@ public class HomeTests {
     @ValueSource( strings = {digits, letters, symbols, exclude} )
     public void testSwitch(String nameSwitch) {
         GeneratePasswordPage generatePasswordPage = new Home(driver, wait).addPassword();
-        String startValue = generatePasswordPage.getAttribute(nameSwitch, "value");
+        String startValue = generatePasswordPage.getSwitchValue(nameSwitch);
         generatePasswordPage.click(nameSwitch);
-        String endValue = generatePasswordPage.getAttribute(nameSwitch, "value");
+        String endValue = generatePasswordPage.getSwitchValue(nameSwitch);
         Assertions.assertFalse(startValue.equals(endValue));
     }
     @ParameterizedTest
-    @ValueSource( strings = {"1", "0"} )
-    public void testNotEnabledGeneratePasswordButton(String value) {
+    @ValueSource( strings = {"On", "Off"} )
+    public void testNotEnabledGeneratePasswordButton(String action) {
         GeneratePasswordPage generatePasswordPage = new Home(driver, wait).addPassword();
-        String startEnable = generatePasswordPage.getAttribute(generate, "enabled");
-        if (generatePasswordPage.getAttribute(nameSwitch[0], "value").equals("0")) {
-            generatePasswordPage.click(nameSwitch[0]);
-        }
+        generatePasswordPage.turnOnSwitch(digits);
+        String startEnable = generatePasswordPage.getEnabledGeneratePasswordButton();
         for(String name : nameSwitch) {
-            if (generatePasswordPage.getAttribute(name, "value").equals("1")) {
-                generatePasswordPage.click(name);
-            }
+            generatePasswordPage.turnOffSwitch(name);
         }
-        if (!(generatePasswordPage.getAttribute(exclude, "value").equals(value))) {
-            generatePasswordPage.click(exclude);
-        }
-        String endEnable = generatePasswordPage.getAttribute(generate, "enabled");
+        generatePasswordPage.turnSwitch(action, exclude);
+        String endEnable = generatePasswordPage.getEnabledGeneratePasswordButton();
         Assertions.assertFalse(startEnable.equals(endEnable));
     }
     @ParameterizedTest
@@ -115,7 +121,7 @@ public class HomeTests {
         GeneratePasswordPage generatePasswordPage = new Home(driver, wait).addPassword();
         Assertions.assertTrue(driver.getPageSource().contains("You have not generated a password yet"));
         generatePasswordPage.turnOnOneSwitch(desiredSwitch, nameSwitch);
-        generatePasswordPage.click(generate);
+        generatePasswordPage.clickGeneratePassword();
         if (desiredSwitch.equals(nameSwitch[1])) {
             Assertions.assertTrue(driver.getPageSource().contains("Insecure password"));
         } else {
@@ -138,7 +144,7 @@ public class HomeTests {
         for (int i = 0; i < length; i++) {
             String a = password.substring(i, i+1);
             contains = containsSymbols(a);
-            if (contains == false) {
+            if (!contains) {
                 break;
             }
         }
@@ -156,14 +162,12 @@ public class HomeTests {
     }
     @ParameterizedTest
     @ValueSource( strings = {digits, letters, symbols} )
-    public void test(String desiredSwitch) {
+    public void testPasswordConsistOf(String desiredSwitch) {
         GeneratePasswordPage generatePasswordPage = new Home(driver, wait).addPassword();
         Assertions.assertTrue(driver.getPageSource().contains("You have not generated a password yet"));
         generatePasswordPage.turnOnOneSwitch(desiredSwitch, nameSwitch);
-        generatePasswordPage.click(generate);
-        List parser = driver.findElements(By.xpath("//XCUIElementTypeOther[contains(@name,\"password\")]//preceding::XCUIElementTypeStaticText"));
-        WebElement passwordWebElement = (WebElement)parser.get(3);
-        String parsedPassword = passwordWebElement.getAttribute("name");
+        generatePasswordPage.clickGeneratePassword();
+        String parsedPassword = generatePasswordPage.getGeneratedPassword();
         if (desiredSwitch.equals(nameSwitch[0])) {
             Assertions.assertTrue(NumberUtils.isDigits(parsedPassword));
         } else if (desiredSwitch.equals(nameSwitch[1])) {
@@ -184,23 +188,16 @@ public class HomeTests {
     }
 
     @ParameterizedTest
-    @ValueSource( strings = {"excludeTurnOn", "excludeTurnOff"} )
+    @ValueSource( strings = {"On", "Off"} )
     public void testShouldExcludeSimilarCharacters(String action) {
         GeneratePasswordPage generatePasswordPage = new Home(driver, wait).addPassword();
-        Assertions.assertTrue(driver.getPageSource().contains("You have not generated a password yet"));
-        for (String name : nameSwitch) {
-            generatePasswordPage.turnOnSwitch(name);
-        }
-        if (action.equals("excludeTurnOn")) {
-            generatePasswordPage.turnOnSwitch(exclude);
-        } else {
-            generatePasswordPage.turnOffSwitch(exclude);
-        }
+        generatePasswordPage.turnOnThreeSwitch(nameSwitch);
+        Actions actions = new Actions(driver);
+        actions.dragFromTo(xLength8,y,xLength20,y);
+        generatePasswordPage.turnSwitch(action, exclude);
         for (int i = 0; i < 5; i++) {
-            generatePasswordPage.click(generate);
-            List parser = driver.findElements(By.xpath("//XCUIElementTypeOther[contains(@name,\"password\")]//preceding::XCUIElementTypeStaticText"));
-            WebElement passwordWebElement = (WebElement)parser.get(3);
-            String parsedPassword = passwordWebElement.getAttribute("name");
+            generatePasswordPage.clickGeneratePassword();
+            String parsedPassword = generatePasswordPage.getGeneratedPassword();
             if (action.equals("excludeTurnOn")) {
                 Assertions.assertFalse(containsSimilarCharacters(parsedPassword));
             } else {
@@ -209,11 +206,85 @@ public class HomeTests {
                     break;
                 } else {
                     count++;
-                    System.out.println(count);
                 }
                 Assertions.assertTrue(count < 5);
             }
         }
+        actions.dragFromTo(xLength20,y,xLength8,y);
+    }
+    @ParameterizedTest
+    @ValueSource( ints = {xLength20, xLength4} )
+    public void testTheLengthValueInTheTextShouldChange(int length) {
+        GeneratePasswordPage generatePasswordPage = new Home(driver, wait).addPassword();
+        Assertions.assertEquals(8,generatePasswordPage.getPasswordLength());
+        Actions actions = new Actions(driver);
+        actions.dragFromTo(xLength8,y,length,y);
+        if (length == xLength20) {
+            Assertions.assertEquals(20,generatePasswordPage.getPasswordLength());
+        } else {
+            Assertions.assertEquals(4, generatePasswordPage.getPasswordLength());
+        }
+        actions.dragFromTo(length,y,xLength8,y);
+    }
+    @ParameterizedTest
+    @ValueSource( ints = {xLength20, xLength4} )
+    public void testPasswordLengthShouldChange(int length) {
+        GeneratePasswordPage generatePasswordPage = new Home(driver, wait).addPassword();
+        generatePasswordPage.clickGeneratePassword();
+        Assertions.assertEquals(8,generatePasswordPage.getGeneratedPassword().length());
+        Actions actions = new Actions(driver);
+        actions.dragFromTo(xLength8,y,length,y);
+        generatePasswordPage.clickGeneratePassword();
+        actions.dragFromTo(length,y,xLength8,y);
+        if (length == xLength20) {
+            Assertions.assertEquals(20,generatePasswordPage.getGeneratedPassword().length());
+        } else {
+            Assertions.assertEquals(4, generatePasswordPage.getGeneratedPassword().length());
+        }
+    }
+    @Test
+    public void testShouldGenerateStrongPassword() {
+        GeneratePasswordPage generatePasswordPage = new Home(driver, wait).addPassword();
+        Actions actions = new Actions(driver);
+        actions.dragFromTo(xLength8,y,xLength20,y);
+        generatePasswordPage.turnOnThreeSwitch(nameSwitch);
+        generatePasswordPage.clickGeneratePassword();
+        actions.dragFromTo(xLength20,y,xLength8,y);
+        Assertions.assertTrue(driver.getPageSource().contains("Strong password"));
+    }
+    @Test
+    public void testGoToGeneratePasswordPageAndBack() {
+        GeneratePasswordPage generatePasswordPage = new Home(driver, wait).addPassword();
+        Assertions.assertTrue(driver.getPageSource().contains("Generate password"));
+        generatePasswordPage.goBack();
+        Assertions.assertTrue(driver.getPageSource().contains("Home"));
+    }
+    @Test
+    public void testGoToGeneratePasswordPageAndBackBySwipe() {
+        new Home(driver, wait).addPassword();
+        Assertions.assertTrue(driver.getPageSource().contains("Generate password"));
+        new Actions(driver).dragFromTo(10, y, 300, y);
+        Assertions.assertTrue(driver.getPageSource().contains("Home"));
+    }
+    @Test
+    public void testGoToCreateAccountPageAndBack() {
+        GeneratePasswordPage generatePasswordPage = new Home(driver, wait).addPassword();
+        CreateAccountPage createAccountPage = generatePasswordPage.savePassword();
+        Assertions.assertTrue(driver.getPageSource().contains("Сreate account"));
+        createAccountPage.goBack();
+        Assertions.assertTrue(driver.getPageSource().contains("Generate password"));
+    }
+    @Test
+    public void testGoToCreateAccountPageAndBackBySwipe() {
+        GeneratePasswordPage generatePasswordPage = new Home(driver, wait).addPassword();
+        generatePasswordPage.savePassword();
+        Assertions.assertTrue(driver.getPageSource().contains("Сreate account"));
+        new Actions(driver).dragFromTo(10, y, 300, y);
+        Assertions.assertTrue(driver.getPageSource().contains("Generate password"));
+    }
+    @Test
+    public void testSaveButtonShouldBeNotEnabled() {
+        Assertions.assertThrows(TimeoutException.class, () -> new Home(driver, wait).addPassword().clickSave());
     }
 
 }
