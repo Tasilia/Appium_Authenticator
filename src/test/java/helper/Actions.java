@@ -24,4 +24,8 @@ public class Actions {
         params.put("toY", toY);
         driver.executeScript("mobile: dragFromToForDuration", params);
     }
+    public void scroll(String direction) throws InterruptedException {
+        driver.executeScript("mobile:scroll", ImmutableMap.of("direction", direction));
+        Thread.sleep(100);
+    }
 }

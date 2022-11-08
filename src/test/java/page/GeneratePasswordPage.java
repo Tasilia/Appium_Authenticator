@@ -110,7 +110,7 @@ public class GeneratePasswordPage {
     public void goBack() {
         driver.findElement(backButton).click();
     }
-    public CreateAccountPage savePassword(){
+    public CreateAccountPage createAndSavePassword(){
         turnOnSwitch(digits);
         clickGeneratePassword();
         return clickSave();

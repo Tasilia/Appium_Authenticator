@@ -3,6 +3,7 @@ package page;
 import io.appium.java_client.AppiumDriver;
 import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -13,11 +14,11 @@ public class CreateAccountPage {
     By textLink = By.cssSelector("[label = 'LINK']");
     By textAccount = By.cssSelector("[label = 'ACCOUNT']");
     By textPassword = By.cssSelector("[label = 'PASSWORD']");
-    By fieldLink = By.cssSelector("[value = 'Enter link']");
-    By fieldAccount = By.cssSelector("[value = 'Enter account name']");
-    By fieldPassword = By.xpath("(//XCUIElementTypeOther[@name=\"Back Сreate account LINK Enter link " +
-            "ACCOUNT Enter account name PASSWORD Сreate account\"])[17]/XCUIElementTypeOther[4]/" +
-            "XCUIElementTypeTextField");
+    By fieldLink = By.xpath("//XCUIElementTypeTextField");
+    //(//XCUIElementTypeOther[@name="Back Сreate account LINK ACCOUNT PASSWORD Enter password Сreate account"])[17]/XCUIElementTypeOther[2]/XCUIElementTypeTextField
+    By fieldAccount = By.xpath("//XCUIElementTypeTextField//following::XCUIElementTypeTextField[1]");
+    //(//XCUIElementTypeOther[@name="Back Сreate account LINK ACCOUNT PASSWORD Enter password Сreate account"])[17]/XCUIElementTypeOther[3]/XCUIElementTypeTextField
+    By fieldPassword = By.xpath("//XCUIElementTypeTextField//following::XCUIElementTypeTextField[2]");
     By createAccountButton = By.xpath("(//XCUIElementTypeOther[@name=\"Сreate account\"])[2]");
     By backButton = By.xpath("(//XCUIElementTypeOther[@name=\"Back\"])[3]");
 
@@ -36,5 +37,35 @@ public class CreateAccountPage {
 
     public void goBack() {
         driver.findElement(backButton).click();
+    }
+    public void enterFieldLink(String link) {
+        driver.findElement(fieldLink).sendKeys(link);
+        driver.findElement(fieldLink).sendKeys(Keys.ENTER);
+    }
+    public void enterFieldAccount(String account) {
+        driver.findElement(fieldAccount).sendKeys(account);
+        driver.findElement(fieldAccount).sendKeys(Keys.ENTER);
+    }
+    public void enterFieldPassword(String password) {
+        deletePassword();
+        driver.findElement(fieldPassword).sendKeys(password);
+        driver.findElement(fieldPassword).sendKeys(Keys.ENTER);
+    }
+    public void deletePassword() {
+        driver.findElement(fieldPassword).clear();
+        driver.findElement(fieldPassword).sendKeys(Keys.ENTER);
+    }
+    public Home createAccount(String link, String account) {
+        enterFieldLink(link);
+        enterFieldAccount(account);
+        driver.findElement(createAccountButton).click();
+        driver.findElement(By.cssSelector("[label = 'Dismiss (ESC)']")).click();
+        return new Home(driver, wait);
+    }
+    public String getCreateAccountButtonEnabled() {
+        return driver.findElement(createAccountButton).getAttribute("enabled");
+    }
+    public String getPassword() {
+        return driver.findElement(fieldPassword).getAttribute("value");
     }
 }
