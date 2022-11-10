@@ -59,7 +59,7 @@ public class CreateAccountPage {
         enterFieldLink(link);
         enterFieldAccount(account);
         driver.findElement(createAccountButton).click();
-        driver.findElement(By.cssSelector("[label = 'Dismiss (ESC)']")).click();
+        wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[label = 'Dismiss (ESC)']"))).click();
         return new Home(driver, wait);
     }
     public String getCreateAccountButtonEnabled() {

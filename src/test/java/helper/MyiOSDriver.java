@@ -21,9 +21,7 @@ public class MyiOSDriver {
                 "Authenticator.app");
         desiredCapabilities.setCapability("appium:includeSafariInWebviews", true);
         desiredCapabilities.setCapability("appium:newCommandTimeout", 3600);
-        desiredCapabilities.setCapability("appium:connectHardwareKeyboard", true);
-        desiredCapabilities.setCapability("mobile:source", "description");
-        desiredCapabilities.setCapability("simpleIsVisibleCheck", true);
+        desiredCapabilities.setCapability("appium:connectHardwareKeyboard", false);
         return desiredCapabilities;
     }
 }

@@ -11,6 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import page.*;
 
@@ -66,8 +67,9 @@ public class HomeTests {
 
     @Test
     public void testAutoFillOn() {
+        Home home = new Home(driver, wait);
         Assertions.assertTrue(driver.getPageSource().contains("AutoFill off"));
-        new Home(driver, wait).autoFillOn();
+        home.autoFillOn();
         Assertions.assertTrue(driver.getPageSource().contains("AutoFill on"));
     }
 
@@ -165,7 +167,6 @@ public class HomeTests {
             Assertions.assertTrue(isSymbols(parsedPassword));
         }
     }
-
     @ParameterizedTest
     @ValueSource( strings = {"On", "Off"} )
     public void testShouldExcludeSimilarCharacters(String action) {
@@ -243,14 +244,14 @@ public class HomeTests {
     }
     @Test
     public void testGoToCreateAccountPageAndBack() {
-        CreateAccountPage createAccountPage = createAndSavePassword();
+        CreateAccountPage createAccountPage = generateAndSavePassword(new Home(driver, wait));
         Assertions.assertTrue(driver.getPageSource().contains("Сreate account"));
         createAccountPage.goBack();
         Assertions.assertTrue(driver.getPageSource().contains("Generate password"));
     }
     @Test
     public void testGoToCreateAccountPageAndBackBySwipe() {
-        createAndSavePassword();
+        generateAndSavePassword(new Home(driver, wait));
         Assertions.assertTrue(driver.getPageSource().contains("Сreate account"));
         actions.dragFromTo(10, y, 300, y);
         Assertions.assertTrue(driver.getPageSource().contains("Generate password"));
@@ -261,19 +262,19 @@ public class HomeTests {
     }
     @Test
     public void testCreateAccountButtonShouldBeNotEnableWithoutLink() {
-        CreateAccountPage createAccountPage = createAndSavePassword();
+        CreateAccountPage createAccountPage = generateAndSavePassword(new Home(driver, wait));
         createAccountPage.enterFieldAccount(account);
         Assertions.assertTrue(createAccountPage.getCreateAccountButtonEnabled().equals("false"));
     }
     @Test
     public void testCreateAccountButtonShouldBeNotEnableWithoutAccount() {
-        CreateAccountPage createAccountPage = createAndSavePassword();
+        CreateAccountPage createAccountPage = generateAndSavePassword(new Home(driver, wait));
         createAccountPage.enterFieldLink(link);
         Assertions.assertTrue(createAccountPage.getCreateAccountButtonEnabled().equals("false"));
     }
     @Test
     public void testCreateAccountButtonShouldBeNotEnableWithoutPassword() {
-        CreateAccountPage createAccountPage = createAndSavePassword();
+        CreateAccountPage createAccountPage = generateAndSavePassword(new Home(driver, wait));
         createAccountPage.deletePassword();
         createAccountPage.enterFieldLink(link);
         createAccountPage.enterFieldAccount(account);
@@ -289,60 +290,64 @@ public class HomeTests {
         String actual = createAccountPage.getPassword();
         Assertions.assertTrue(expected.equals(actual));
     }
-    public String createAccountAngGetPassword() {
+    public Object[] createAccountAngGetPassword() {
         GeneratePasswordPage generatePasswordPage = new Home(driver, wait).addPassword();
         generatePasswordPage.turnOnSwitch(digits);
         generatePasswordPage.clickGeneratePassword();
         String expectedPassword = generatePasswordPage.getGeneratedPassword();
         CreateAccountPage createAccountPage = generatePasswordPage.clickSave();
-        createAccountPage.createAccount(link, account);
-        return expectedPassword;
+        return new Object[] {expectedPassword, createAccountPage.createAccount(link, account)};
     }
     @Test
     public void testShouldCreateAndDeleteAccount() {
         String pageSource = driver.getPageSource();
         Assertions.assertTrue(pageSource.contains("You have not generated a password yet") &&
                 pageSource.contains("You can add a password and save it"));
-        String expectedPassword = createAccountAngGetPassword();
+        Object[] passwordAndHomePage = createAccountAngGetPassword();
+        String expectedPassword = passwordAndHomePage[0].toString();
+        Home home = (Home)passwordAndHomePage[1];
         pageSource = driver.getPageSource();
         Assertions.assertTrue(pageSource.contains("Search") && pageSource.contains(link) &&
                 pageSource.contains(account) && pageSource.contains(expectedPassword));
-        homeWithAccount.deletePassword(link, account, expectedPassword);
+        home.deletePassword(link, account, expectedPassword);
         pageSource = driver.getPageSource();
         Assertions.assertTrue(pageSource.contains("You have not generated a password yet") &&
                 pageSource.contains("You can add a password and save it"));
     }
     @Test
     public void testShouldCopyPassword() {
-        String expectedPassword = createAccountAngGetPassword();
-        homeWithAccount.clickCopy(link, account, expectedPassword);
+        Object[] passwordAndHomePage = createAccountAngGetPassword();
+        String expectedPassword = passwordAndHomePage[0].toString();
+        Home home = (Home)passwordAndHomePage[1];
+        home.clickCopy(link, account, expectedPassword);
         Assertions.assertTrue(driver.getPageSource().contains("Password copied"));
-        homeWithAccount.deletePassword(link, account, expectedPassword);
+        home.deletePassword(link, account, expectedPassword);
     }
     @Test
     public void testShouldNotDeletePassword() {
-        String expectedPassword = createAccountAngGetPassword();
-        homeWithAccount.clickDeletePassword(link, account, expectedPassword);
-        homeWithAccount.clickCancel();
+        Object[] passwordAndHomePage = createAccountAngGetPassword();
+        String expectedPassword = passwordAndHomePage[0].toString();
+        Home home = (Home)passwordAndHomePage[1];
+        home.clickDeletePassword(link, account, expectedPassword);
+        home.clickCancel();
         String pageSource = driver.getPageSource();
         Assertions.assertTrue(pageSource.contains("Search") && pageSource.contains(link) &&
                 pageSource.contains(account) && pageSource.contains(expectedPassword));
-        homeWithAccount.deletePassword(link, account, expectedPassword);
+        home.deletePassword(link, account, expectedPassword);
     }
-    public CreateAccountPage createAndSavePassword() {
-        GeneratePasswordPage generatePasswordPage = new Home(driver, wait).addPassword();
+    public CreateAccountPage generateAndSavePassword(Home home) {
+        GeneratePasswordPage generatePasswordPage = home.addPassword();
         return generatePasswordPage.createAndSavePassword();
     }
-    public void createAccount(String link, String account) {
-        createAndSavePassword().createAccount(link, account);
+    public Home createAccount(Home home, String link, String account) {
+        return generateAndSavePassword(home).createAccount(link, account);
     }
     @Test
     public void testShouldCreateNoMoreThanThreeAccountsWithoutASubscription() {
-        createAccount(link, account);
-        createAccount(link, account);
-        createAccount(link, account);
-        Home home = new Home(driver, wait);
+        Home home = createAccount(createAccount(createAccount(new Home(driver, wait),link, account),link, account),
+                link, account);
         home.clickAddPassword();
+        wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[label = 'Dismiss (ESC)']")));
         Assertions.assertTrue(driver.getPageSource().contains("The action 'NAVIGATE' with payload"));
         driver.findElement(By.cssSelector("[label = 'Dismiss (ESC)']")).click();
         home.clearAll();
@@ -352,8 +357,7 @@ public class HomeTests {
     }
     @Test
     public void testShouldNotDeleteAllPasswords() {
-        createAccount(link, account);
-        Home home = new Home(driver, wait);
+        Home home = createAccount(new Home(driver, wait),link, account);
         home.clickClearAll();
         home.clickCancel();
         String pageSource = driver.getPageSource();
