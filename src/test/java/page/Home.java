@@ -68,11 +68,13 @@ public class Home {
         }
     }
 
-    public void goToSecretFolder(){
+    public Paywall goToSecretFolderWithoutSubscribe(){
         driver.findElement(secretFolderButton).click();
+        return new Paywall(driver, wait);
     }
-    public void goToSettings(){
+    public Settings goToSettings(){
         driver.findElement(settingsButton).click();
+        return new Settings(driver, wait);
     }
     public void goBack() {
         driver.findElement(backButton).click();

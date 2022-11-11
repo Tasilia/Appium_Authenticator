@@ -27,7 +27,7 @@ public class PasswordTests {
     public void setUp() throws MalformedURLException {
         URL remoteUrl = new URL("http://127.0.0.1:4723/wd/hub");
         MyiOSDriver myiOSDriver = new MyiOSDriver();
-        driver = new IOSDriver(remoteUrl, myiOSDriver.getIOSDriverCapabilities(false, true));
+        driver = new IOSDriver(remoteUrl, myiOSDriver.getIOSDriverCapabilities(true, false));
         wait = new WebDriverWait(driver, Duration.ofSeconds(50));
     }
     @AfterEach
@@ -66,5 +66,10 @@ public class PasswordTests {
         onboarding.doubleSwipe("left");
         onboarding.clickContinue();
         Assertions.assertTrue(driver.getPageSource().contains("Create a password"));
+    }
+    @Test
+    public void testFaceId() {
+        setPassword().clickFaceId();
+        Assertions.assertTrue(driver.getPageSource().contains("Error"));
     }
 }

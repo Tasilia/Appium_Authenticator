@@ -365,4 +365,17 @@ public class HomeTests {
                 pageSource.contains(account));
         home.clearAll();
     }
+    @Test
+    public void testGoToSecretFolder() {
+        new Home(driver, wait).goToSecretFolderWithoutSubscribe().closePaywall();
+    }
+    @Test
+    public void testGoToSettings() {
+        Settings settings = new Home(driver, wait).goToSettings();
+        settings.clickRateUsButton();
+        String pageSource = driver.getPageSource();
+        Assertions.assertTrue(pageSource.contains("Do you like our App?"));
+        Assertions.assertTrue(pageSource.contains("Your feedback is important for us!"));
+        settings.clickNotNowButton();
+    }
 }
