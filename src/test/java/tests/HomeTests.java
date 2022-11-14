@@ -174,22 +174,25 @@ public class HomeTests {
         generatePasswordPage.turnOnThreeSwitch(nameSwitch);
         actions.dragFromTo(xLength8,y,xLength20,y);
         generatePasswordPage.turnSwitch(action, exclude);
-        for (int i = 0; i < 5; i++) {
-            generatePasswordPage.clickGeneratePassword();
-            String parsedPassword = generatePasswordPage.getGeneratedPassword();
-            if (action.equals("excludeTurnOn")) {
-                Assertions.assertFalse(containsCharacter(parsedPassword, similarCharacters));
-            } else {
-                int count = 1;
-                if (containsCharacter(parsedPassword, similarCharacters)) {
-                    break;
+        try {
+            for (int i = 0; i < 5; i++) {
+                generatePasswordPage.clickGeneratePassword();
+                String parsedPassword = generatePasswordPage.getGeneratedPassword();
+                if (action.equals("excludeTurnOn")) {
+                    Assertions.assertFalse(containsCharacter(parsedPassword, similarCharacters));
                 } else {
-                    count++;
+                    int count = 1;
+                    if (containsCharacter(parsedPassword, similarCharacters)) {
+                        break;
+                    } else {
+                        count++;
+                    }
+                    Assertions.assertTrue(count < 5);
                 }
-                Assertions.assertTrue(count < 5);
             }
+        } finally {
+            actions.dragFromTo(xLength20, y, xLength8, y);
         }
-        actions.dragFromTo(xLength20,y,xLength8,y);
     }
     @ParameterizedTest
     @ValueSource( ints = {xLength20, xLength4} )
@@ -197,12 +200,15 @@ public class HomeTests {
         GeneratePasswordPage generatePasswordPage = new Home(driver, wait).addPassword();
         Assertions.assertEquals(8,generatePasswordPage.getPasswordLength());
         actions.dragFromTo(xLength8,y,length,y);
-        if (length == xLength20) {
-            Assertions.assertEquals(20,generatePasswordPage.getPasswordLength());
-        } else {
-            Assertions.assertEquals(4, generatePasswordPage.getPasswordLength());
+        try {
+            if (length == xLength20) {
+                Assertions.assertEquals(20, generatePasswordPage.getPasswordLength());
+            } else {
+                Assertions.assertEquals(4, generatePasswordPage.getPasswordLength());
+            }
+        } finally {
+            actions.dragFromTo(length, y, xLength8, y);
         }
-        actions.dragFromTo(length,y,xLength8,y);
     }
     @ParameterizedTest
     @ValueSource( ints = {xLength20, xLength4} )
@@ -301,18 +307,23 @@ public class HomeTests {
     @Test
     public void testShouldCreateAndDeleteAccount() {
         String pageSource = driver.getPageSource();
-        Assertions.assertTrue(pageSource.contains("You have not generated a password yet") &&
-                pageSource.contains("You can add a password and save it"));
+        Assertions.assertTrue(pageSource.contains("You have not generated a password yet"));
+        Assertions.assertTrue(pageSource.contains("You can add a password and save it"));
         Object[] passwordAndHomePage = createAccountAngGetPassword();
         String expectedPassword = passwordAndHomePage[0].toString();
         Home home = (Home)passwordAndHomePage[1];
-        pageSource = driver.getPageSource();
-        Assertions.assertTrue(pageSource.contains("Search") && pageSource.contains(link) &&
-                pageSource.contains(account) && pageSource.contains(expectedPassword));
-        home.deletePassword(link, account, expectedPassword);
-        pageSource = driver.getPageSource();
-        Assertions.assertTrue(pageSource.contains("You have not generated a password yet") &&
-                pageSource.contains("You can add a password and save it"));
+        try {
+            pageSource = driver.getPageSource();
+            Assertions.assertTrue(pageSource.contains("Search"));
+            Assertions.assertTrue(pageSource.contains(link));
+            Assertions.assertTrue(pageSource.contains(account));
+            Assertions.assertTrue(pageSource.contains(expectedPassword));
+        } finally {
+            home.deletePassword(link, account, expectedPassword);
+            pageSource = driver.getPageSource();
+            Assertions.assertTrue(pageSource.contains("You have not generated a password yet"));
+            Assertions.assertTrue(pageSource.contains("You can add a password and save it"));
+        }
     }
     @Test
     public void testShouldCopyPassword() {
@@ -320,8 +331,11 @@ public class HomeTests {
         String expectedPassword = passwordAndHomePage[0].toString();
         Home home = (Home)passwordAndHomePage[1];
         home.clickCopy(link, account, expectedPassword);
-        Assertions.assertTrue(driver.getPageSource().contains("Password copied"));
-        home.deletePassword(link, account, expectedPassword);
+        try {
+            Assertions.assertTrue(driver.getPageSource().contains("Password copied"));
+        } finally {
+            home.deletePassword(link, account, expectedPassword);
+        }
     }
     @Test
     public void testShouldNotDeletePassword() {
@@ -330,10 +344,15 @@ public class HomeTests {
         Home home = (Home)passwordAndHomePage[1];
         home.clickDeletePassword(link, account, expectedPassword);
         home.clickCancel();
-        String pageSource = driver.getPageSource();
-        Assertions.assertTrue(pageSource.contains("Search") && pageSource.contains(link) &&
-                pageSource.contains(account) && pageSource.contains(expectedPassword));
-        home.deletePassword(link, account, expectedPassword);
+        try {
+            String pageSource = driver.getPageSource();
+            Assertions.assertTrue(pageSource.contains("Search"));
+            Assertions.assertTrue(pageSource.contains(link));
+            Assertions.assertTrue(pageSource.contains(account));
+            Assertions.assertTrue(pageSource.contains(expectedPassword));
+        } finally {
+            home.deletePassword(link, account, expectedPassword);
+        }
     }
     public CreateAccountPage generateAndSavePassword(Home home) {
         GeneratePasswordPage generatePasswordPage = home.addPassword();
@@ -347,35 +366,69 @@ public class HomeTests {
         Home home = createAccount(createAccount(createAccount(new Home(driver, wait),link, account),link, account),
                 link, account);
         home.clickAddPassword();
-        wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[label = 'Dismiss (ESC)']")));
-        Assertions.assertTrue(driver.getPageSource().contains("The action 'NAVIGATE' with payload"));
-        driver.findElement(By.cssSelector("[label = 'Dismiss (ESC)']")).click();
-        home.clearAll();
-        String pageSource = driver.getPageSource();
-        Assertions.assertTrue(pageSource.contains("You have not generated a password yet") &&
-                pageSource.contains("You can add a password and save it"));
+        try {
+            wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[label = 'Dismiss (ESC)']")));
+            Assertions.assertTrue(driver.getPageSource().contains("The action 'NAVIGATE' with payload"));
+        } finally {
+            driver.findElement(By.cssSelector("[label = 'Dismiss (ESC)']")).click();
+            home.clearAll();
+            String pageSource = driver.getPageSource();
+            Assertions.assertTrue(pageSource.contains("You have not generated a password yet"));
+            Assertions.assertTrue(pageSource.contains("You can add a password and save it"));
+        }
     }
     @Test
     public void testShouldNotDeleteAllPasswords() {
-        Home home = createAccount(new Home(driver, wait),link, account);
+        Object[] passwordAndHomePage = createAccountAngGetPassword();
+        String expectedPassword = passwordAndHomePage[0].toString();
+        Home home = (Home)passwordAndHomePage[1];
         home.clickClearAll();
         home.clickCancel();
-        String pageSource = driver.getPageSource();
-        Assertions.assertTrue(pageSource.contains("Search") && pageSource.contains(link) &&
-                pageSource.contains(account));
-        home.clearAll();
+        try {
+            String pageSource = driver.getPageSource();
+            Assertions.assertTrue(pageSource.contains("Search"));
+            Assertions.assertTrue(pageSource.contains(link));
+            Assertions.assertTrue(pageSource.contains(account));
+            //Assertions.assertTrue(pageSource.contains(expectedPassword));
+        } finally {
+            home.clearAll();
+        }
     }
     @Test
     public void testGoToSecretFolder() {
         new Home(driver, wait).goToSecretFolderWithoutSubscribe().closePaywall();
     }
-    @Test
-    public void testGoToSettings() {
+    public Settings rateUs() {
         Settings settings = new Home(driver, wait).goToSettings();
         settings.clickRateUsButton();
-        String pageSource = driver.getPageSource();
-        Assertions.assertTrue(pageSource.contains("Do you like our App?"));
-        Assertions.assertTrue(pageSource.contains("Your feedback is important for us!"));
-        settings.clickNotNowButton();
+        return settings;
+    }
+    @Test
+    public void testCancelRateUs() {
+        rateUs().clickNotNowButton();
+    }
+    @Test
+    public void testRateUs() {
+        rateUs().confirmRateUs();
+    }
+    @Test
+    public void testUpgradeToPRO() {
+        new Home(driver, wait).goToSettings().clickUpgradeButton().closePaywallFromSettings();
+    }
+    @Test
+    public void testShare() {
+        new Home(driver, wait).goToSettings().clickShareButton();
+    }
+    @Test
+    public void testContactUs() {
+        new Home(driver, wait).goToSettings().clickContactUsButton();
+    }
+    @Test
+    public void testPrivacyPolicy() {
+        new Home(driver, wait).goToSettings().clickPrivacyPolicyButton();
+    }
+    @Test
+    public void testTermsOfUseButton() {
+        new Home(driver, wait).goToSettings().clickTermsOfUseButton();
     }
 }

@@ -24,4 +24,8 @@ public class Paywall {
         driver.findElement(closeButton).click();
         return new Home(driver, wait);
     }
+    public Settings closePaywallFromSettings() {
+        driver.findElement(closeButton).click();
+        return new Settings(driver, wait);
+    }
 }
