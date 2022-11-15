@@ -27,10 +27,12 @@ public class CreatePasswordPage {
         Assertions.assertTrue(driver.findElement(titleTwo).isDisplayed());
         Assertions.assertTrue(driver.findElement(titleThree).isDisplayed());
     }
+
     public void deleteNumber() {
         wait.until(ExpectedConditions.elementToBeClickable(number4Button)).click();
         wait.until(ExpectedConditions.elementToBeClickable(deleteButton)).click();
     }
+
     public void createPassword(Integer[] password) {
         new GeneratePassword().clickFourTimes(password, wait);
         wait.until(ExpectedConditions.elementToBeClickable(number4Button));
@@ -42,6 +44,7 @@ public class CreatePasswordPage {
         new GeneratePassword().clickFourTimes(password, wait);
         return new Paywall(driver, wait);
     }
+
     public void createAndRepeatWrongPassword(Integer[] password, Integer[] wrongPassword) {
         deleteNumber();
         createPassword(password);

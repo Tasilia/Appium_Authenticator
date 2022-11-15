@@ -8,13 +8,16 @@ import java.util.Map;
 
 public class Actions {
     AppiumDriver driver;
-    public Actions(AppiumDriver driver){
+
+    public Actions(AppiumDriver driver) {
         this.driver = driver;
     }
-    public void swipe(String direction) throws InterruptedException{
+
+    public void swipe(String direction) throws InterruptedException {
         driver.executeScript("mobile:swipe", ImmutableMap.of("direction", direction));
         Thread.sleep(200);
     }
+
     public void dragFromTo(int fromX, int fromY, int toX, int toY) {
         Map<String, Object> params = new HashMap<>();
         params.put("duration", 0.5);
@@ -24,6 +27,7 @@ public class Actions {
         params.put("toY", toY);
         driver.executeScript("mobile: dragFromToForDuration", params);
     }
+
     public void scroll(String direction) throws InterruptedException {
         driver.executeScript("mobile:scroll", ImmutableMap.of("direction", direction));
         Thread.sleep(100);

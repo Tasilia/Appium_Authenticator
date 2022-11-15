@@ -19,7 +19,8 @@ public class Settings {
     By termsOfUseButton = By.cssSelector("[label = 'Terms of use']");
     By upgradeButton = By.xpath("//XCUIElementTypeOther[@name='Upgrade to PRO Access To all features \nCancel anytime']");
     By notNowButton = By.cssSelector("[label = 'Not now']");
-    public Settings(AppiumDriver driver, WebDriverWait wait){
+
+    public Settings(AppiumDriver driver, WebDriverWait wait) {
         this.driver = driver;
         this.wait = wait;
         wait.until(ExpectedConditions.visibilityOfElementLocated(upgradeButton));
@@ -30,28 +31,34 @@ public class Settings {
         Assertions.assertTrue(driver.findElement(privacyPolicyButton).isDisplayed());
         Assertions.assertTrue(driver.findElement(termsOfUseButton).isDisplayed());
     }
+
     public void clickRateUsButton() {
         driver.findElement(rateUsButton).click();
         String pageSource = driver.getPageSource();
         Assertions.assertTrue(pageSource.contains("Do you like our App?"));
         Assertions.assertTrue(pageSource.contains("Your feedback is important for us!"));
     }
+
     public void clickShareButton() {
         driver.findElement(shareButton).click();
         Assertions.assertTrue(driver.findElement(shareButton).getAttribute("visible").equals("false"));
     }
+
     public void clickContactUsButton() {
         driver.findElement(contactUsButton).click();
         launchApp();
     }
+
     public void clickPrivacyPolicyButton() {
         driver.findElement(privacyPolicyButton).click();
         launchApp();
     }
+
     public void clickTermsOfUseButton() {
         driver.findElement(termsOfUseButton).click();
         launchApp();
     }
+
     public void launchApp() {
         try {
             Assertions.assertTrue(driver.getPageSource().contains("Safari"));
@@ -60,14 +67,17 @@ public class Settings {
                     "appstrain.test.authenticator"));
         }
     }
+
     public Paywall clickUpgradeButton() {
         driver.findElement(upgradeButton).click();
         return new Paywall(driver, wait);
     }
+
     public void clickNotNowButton() {
         driver.findElement(notNowButton).click();
         Assertions.assertTrue(driver.findElement(upgradeButton).getAttribute("visible").equals("true"));
     }
+
     public void confirmRateUs() {
         driver.findElement(rateUsButton2).click();
         Assertions.assertTrue(driver.findElement(upgradeButton).getAttribute("visible").equals("true"));

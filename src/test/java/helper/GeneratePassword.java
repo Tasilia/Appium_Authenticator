@@ -12,9 +12,10 @@ public class GeneratePassword {
         }
         return password;
     }
+
     public void clickFourTimes(Integer[] password, WebDriverWait wait) {
         for (int i = 0; i < 4; i++) {
-            wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[label="+password[i]+"]"))).click();
+            wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[label=" + password[i] + "]"))).click();
         }
     }
 }

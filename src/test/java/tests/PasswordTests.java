@@ -23,6 +23,7 @@ public class PasswordTests {
     WebDriverWait wait;
     Integer[] password = new GeneratePassword().getRandomPassword();
     Integer[] wrongPassword = new GeneratePassword().getRandomPassword();
+
     @BeforeEach
     public void setUp() throws MalformedURLException {
         URL remoteUrl = new URL("http://127.0.0.1:4723/wd/hub");
@@ -30,36 +31,42 @@ public class PasswordTests {
         driver = new IOSDriver(remoteUrl, myiOSDriver.getIOSDriverCapabilities(true, false));
         wait = new WebDriverWait(driver, Duration.ofSeconds(50));
     }
+
     @AfterEach
     public void tearDown() {
         driver.quit();
     }
-    public EnterPasswordPage setPassword(){
+
+    public EnterPasswordPage setPassword() {
         new Onboarding(driver, wait).passTheOnboarding().createAndRepeatPassword(password).closePaywall();
         driver.terminateApp("appstrain.test.authenticator");
         driver.executeScript("mobile: launchApp", ImmutableMap.of("bundleId",
                 "appstrain.test.authenticator"));
         return new EnterPasswordPage(driver, wait);
     }
+
     @Test
     public void testEnterCorrectPassword() {
         setPassword().enterPassword(password);
         Assertions.assertTrue(driver.getPageSource().contains("Home"));
     }
+
     @Test
     public void testCreateAndRepeatWrongPassword() {
         new Onboarding(driver, wait).passTheOnboarding().createAndRepeatWrongPassword(password, wrongPassword);
         wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[label=4]")));
         Assertions.assertTrue(driver.getPageSource().contains("Passwords are not identical"));
     }
+
     @Test
     public void testEnterWrongPassword() {
         setPassword().enterPassword(wrongPassword);
         wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[label=4]")));
         Assertions.assertTrue(driver.getPageSource().contains("Wrong password"));
     }
+
     @Test
-    public void testSwipeOnboarding() throws InterruptedException{
+    public void testSwipeOnboarding() throws InterruptedException {
         Onboarding onboarding = new Onboarding(driver, wait);
         onboarding.doubleSwipe("left");
         onboarding.doubleSwipe("right");
@@ -67,6 +74,7 @@ public class PasswordTests {
         onboarding.clickContinue();
         Assertions.assertTrue(driver.getPageSource().contains("Create a password"));
     }
+
     @Test
     public void testFaceId() {
         setPassword().clickFaceId();

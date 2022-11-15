@@ -51,25 +51,31 @@ public class GeneratePasswordPage {
         Assertions.assertTrue(pageSource.contains(textSymbols));
         Assertions.assertTrue(pageSource.contains(textExclude));
     }
+
     public String getSwitchValue(String need) {
         return driver.findElement(mapSwitch.get(need)).getAttribute("value");
     }
+
     public String getEnabledGeneratePasswordButton() {
         return driver.findElement(generatePasswordButton).getAttribute("enabled");
     }
-    public void click(String desiredSwitch){
+
+    public void click(String desiredSwitch) {
         driver.findElement(mapSwitch.get(desiredSwitch)).click();
     }
+
     public void turnOnSwitch(String desiredSwitch) {
         if (getSwitchValue(desiredSwitch).equals("0")) {
             click(desiredSwitch);
         }
     }
+
     public void turnOffSwitch(String desiredSwitch) {
         if (getSwitchValue(desiredSwitch).equals("1")) {
             click(desiredSwitch);
         }
     }
+
     public void turnOnOneSwitch(String desiredSwitch, String[] nameSwitch) {
         for (String name : nameSwitch) {
             if (name.equals(desiredSwitch)) {
@@ -79,15 +85,18 @@ public class GeneratePasswordPage {
             }
         }
     }
+
     public Integer getPasswordLength() {
         String passwordLength = driver.findElement(textPasswordLength).getAttribute("name");
         return Integer.parseInt(passwordLength.substring(8));
     }
+
     public String getGeneratedPassword() {
         List parser = driver.findElements(passwordPath);
-        WebElement passwordWebElement = (WebElement)parser.get(3);
+        WebElement passwordWebElement = (WebElement) parser.get(3);
         return passwordWebElement.getAttribute("name");
     }
+
     public void turnSwitch(String action, String desiredSwitch) {
         if (action.equals("On")) {
             turnOnSwitch(desiredSwitch);
@@ -95,22 +104,27 @@ public class GeneratePasswordPage {
             turnOffSwitch(desiredSwitch);
         }
     }
+
     public void turnOnThreeSwitch(String[] nameSwitch) {
         for (String name : nameSwitch) {
             turnOnSwitch(name);
         }
     }
-    public void clickGeneratePassword(){
+
+    public void clickGeneratePassword() {
         driver.findElement(generatePasswordButton).click();
     }
-    public CreateAccountPage clickSave(){
+
+    public CreateAccountPage clickSave() {
         driver.findElement(savePasswordButton).click();
         return new CreateAccountPage(driver, wait);
     }
+
     public void goBack() {
         driver.findElement(backButton).click();
     }
-    public CreateAccountPage createAndSavePassword(){
+
+    public CreateAccountPage createAndSavePassword() {
         turnOnSwitch(digits);
         clickGeneratePassword();
         return clickSave();

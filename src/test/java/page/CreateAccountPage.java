@@ -22,7 +22,7 @@ public class CreateAccountPage {
     By createAccountButton = By.xpath("(//XCUIElementTypeOther[@name=\"Сreate account\"])[2]");
     By backButton = By.xpath("(//XCUIElementTypeOther[@name=\"Back\"])[3]");
 
-    public CreateAccountPage(AppiumDriver driver, WebDriverWait wait){
+    public CreateAccountPage(AppiumDriver driver, WebDriverWait wait) {
         this.driver = driver;
         this.wait = wait;
         wait.until(ExpectedConditions.visibilityOfElementLocated(title));
@@ -38,23 +38,28 @@ public class CreateAccountPage {
     public void goBack() {
         driver.findElement(backButton).click();
     }
+
     public void enterFieldLink(String link) {
         driver.findElement(fieldLink).sendKeys(link);
         driver.findElement(fieldLink).sendKeys(Keys.ENTER);
     }
+
     public void enterFieldAccount(String account) {
         driver.findElement(fieldAccount).sendKeys(account);
         driver.findElement(fieldAccount).sendKeys(Keys.ENTER);
     }
+
     public void enterFieldPassword(String password) {
         deletePassword();
         driver.findElement(fieldPassword).sendKeys(password);
         driver.findElement(fieldPassword).sendKeys(Keys.ENTER);
     }
+
     public void deletePassword() {
         driver.findElement(fieldPassword).clear();
         driver.findElement(fieldPassword).sendKeys(Keys.ENTER);
     }
+
     public Home createAccount(String link, String account) {
         enterFieldLink(link);
         enterFieldAccount(account);
@@ -62,9 +67,11 @@ public class CreateAccountPage {
         wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[label = 'Dismiss (ESC)']"))).click();
         return new Home(driver, wait);
     }
+
     public String getCreateAccountButtonEnabled() {
         return driver.findElement(createAccountButton).getAttribute("enabled");
     }
+
     public String getPassword() {
         return driver.findElement(fieldPassword).getAttribute("value");
     }
